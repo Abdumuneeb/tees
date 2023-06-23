@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  [type='checkbox'],
+  [type='radio'] {
+    @apply text-primary;
+  }
+  [type='checkbox']:focus,
+  [type='radio']:focus {
+    @apply ring-primary;
+  }
+  [type='text']:focus,
+  [type='email']:focus,
+  [type='url']:focus,
+  [type='password']:focus,
+  [type='number']:focus,
+  [type='date']:focus,
+  [type='datetime-local']:focus,
+  [type='month']:focus,
+  [type='search']:focus,
+  [type='tel']:focus,
+  [type='time']:focus,
+  [type='week']:focus,
+  [multiple]:focus,
+  textarea:focus,
+  select:focus {
+    @apply border-primary ring-primary;
+  }
+  [type='text'],
+  [type='email'],
+  [type='url'],
+  [type='password'],
+  [type='number'],
+  [type='date'],
+  [type='datetime-local'],
+  [type='month'],
+  [type='search'],
+  [type='tel'],
+  [type='time'],
+  [type='week'],
+  [multiple],
+  textarea,
+  select {
+    @apply rounded border-platinum;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-block rounded-full bg-primary py-1.5 text-center font-medium uppercase text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-primary-disabled;
+  }
+  .btn-alt {
+    @apply inline-block rounded-full border-2 border-primary py-1.5 px-5 text-center font-medium uppercase text-primary hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:bg-primary-disabled;
+  }
+  .container {
+    @apply mx-auto max-w-[90rem] px-4 sm:px-6;
+  }
+  .categories-grid {
+    @apply grid grid-cols-2 gap-x-2 gap-y-4 sm:gap-y-8 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4;
+  }
+  .btn-2 {
+    @apply inline-block rounded bg-primary text-center font-medium text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:bg-primary-disabled;
+  }
+  .link {
+    @apply text-primary hover:text-primary-hover;
+  }
+  .box-shadow {
+    box-shadow: 0 2px 8px 0 rgba(39, 166, 255, 0.5);
+  }
+  .no-controls {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    margin: 0;
+  }
+}

@@ -1,0 +1,675 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Status {
+  active
+  not_active
+}
+
+enum ProductStatus {
+  active
+  not_active
+  out_of_stock
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  NOT_APPROVED
+  REJECTED
+}
+
+enum UserStatus {
+  active
+  not_active
+  blocked
+}
+
+enum ProductStockImageType {
+  front
+  back
+  left_sleeve
+  right_sleeve
+}
+
+enum OrderStatusType {
+  AWAITING_PAYMENT
+  PAID
+  PAYMENT_DECLINED
+  PACKED
+  SHIPPED
+  DELIVERED
+  CANCELED
+}
+
+enum ReviewType {
+  WEBSITE
+  STORE
+  PRODUCT
+  USER
+  VENDOR
+}
+
+model Country {
+  id        Int       @id @default(autoincrement())
+  code      String
+  title     String
+  status    Status
+  createdAt DateTime? @default(now()) @map("created_at")
+  deletedAt DateTime? @map("deleted_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  State     State[]
+  Address   Address[]
+
+  @@map("countries")
+}
+
+model State {
+  id        Int       @id @default(autoincrement())
+  status    Status
+  title     String
+  countryId Int       @map("country_id")
+  country   Country   @relation(fields: [countryId], references: [id])
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+  City      City[]
+  Address   Address[]
+
+  @@map("states")
+}
+
+model City {
+  id        Int       @id @default(autoincrement())
+  status    Status
+  stateId   Int       @map("state_id")
+  state     State     @relation(fields: [stateId], references: [id])
+  title     String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  Address   Address[]
+
+  @@map("cities")
+}
+
+model Setting {
+  id        Int       @id @default(autoincrement())
+  status    Status
+  key       String
+  value     String    @db.Text
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  @@map("settings")
+}
+
+model Review {
+  id             Int           @id @default(autoincrement())
+  reviewType     ReviewType    @map("review_type")
+  userId         Int           @map("user_id")
+  user           User          @relation("UserReview", fields: [userId], references: [id])
+  orderProductId Int?          @unique @map("order_product_id")
+  orderProduct   OrderProduct? @relation(fields: [orderProductId], references: [id])
+  productId      Int?          @map("product_id")
+  product        Product?      @relation(fields: [productId], references: [id])
+  storeId        Int?          @map("store_id")
+  store          Store?        @relation(fields: [storeId], references: [id])
+  vendorId       Int?          @map("vendor_id")
+  vendor         Vendor?       @relation(fields: [vendorId], references: [id])
+  status         ReviewStatus
+  approvedById   Int?          @map("approved_by_id")
+  approvedBy     User?         @relation("AddedBy", fields: [approvedById], references: [id])
+  rating         Float?        @default(0)
+  review         String?       @db.LongText
+  comment        String?       @db.Text
+  createdAt      DateTime?     @default(now()) @map("created_at")
+  updatedAt      DateTime?     @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  @@map("reviews")
+}
+
+model Permission {
+  id             Int              @id @default(autoincrement())
+  title          String
+  deletedAt      DateTime?        @map("deleted_at")
+  createdAt      DateTime?        @default(now()) @map("created_at")
+  updatedAt      DateTime?        @updatedAt @map("updated_at")
+  PermissionRole PermissionRole[]
+
+  @@map("permissions")
+}
+
+model Role {
+  id             Int              @id @default(autoincrement())
+  title          String
+  deletedAt      DateTime?        @map("deleted_at")
+  createdAt      DateTime?        @default(now()) @map("created_at")
+  updatedAt      DateTime?        @updatedAt @map("updated_at")
+  PermissionRole PermissionRole[]
+  RoleUser       RoleUser[]
+  User           User?            @relation(fields: [userId], references: [id])
+  userId         Int?
+}
+
+model PermissionRole {
+  permissionId Int        @map("permission_id")
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  roleId       Int        @map("role_id")
+  role         Role       @relation(fields: [roleId], references: [id])
+
+  @@id([permissionId, roleId])
+}
+
+model RoleUser {
+  roleId Int  @map("role_id")
+  role   Role @relation(fields: [roleId], references: [id])
+  userId Int  @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@id([roleId, userId])
+  @@map("role_users")
+}
+
+model Page {
+  id              Int       @id @default(autoincrement())
+  title           String?
+  slug            String?
+  content         String?
+  metaTitle       String?   @map("meta_title")
+  metaDescription String?   @map("meta_description")
+  metaTag         String?   @map("meta_tag")
+  metaImage       String?   @map("meta_image")
+  deletedAt       DateTime? @map("deleted_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("pages")
+}
+
+model Account {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?   @db.Text
+  access_token      String?   @db.Text
+  expires_at        String?
+  token_type        String?
+  scope             String?
+  id_token          String?   @db.Text
+  session_state     String?
+  createdAt         DateTime? @default(now()) @map("created_at")
+  updatedAt         DateTime? @updatedAt @map("updated_at")
+
+  @@map("account")
+}
+
+model Session {
+  id           Int       @id @default(autoincrement())
+  sessionToken String    @unique
+  userId       Int
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+  createdAt    DateTime? @default(now()) @map("created_at")
+  updatedAt    DateTime? @updatedAt @map("updated_at")
+
+  @@map("session")
+}
+
+model User {
+  id              Int               @id @default(autoincrement())
+  status          UserStatus?       @default(active)
+  name            String?
+  email           String            @unique
+  phone           String?
+  slug            String?
+  password        String?
+  referredBy      String?           @map("referred_by")
+  image           String?
+  emailVerified   DateTime?         @map("email_verified_at")
+  rememberToken   String?           @map("remember_token")
+  deletedAt       DateTime?         @map("deleted_at")
+  createdAt       DateTime?         @default(now()) @map("created_at")
+  updatedAt       DateTime?         @updatedAt @map("updated_at")
+  address         Address[]
+  Role            Role[]
+  RoleUser        RoleUser[]
+  Vendor          Vendor?
+  Cart            Cart[]
+  Account         Account[]
+  Session         Session[]
+  Order           Order[]
+  Product         Product[]
+  ProductStock    ProductStock[]
+  Review          Review[]          @relation("UserReview")
+  ReviewAdded     Review[]          @relation("AddedBy")
+  CartDesignSize  CartDesignSize[]
+  CartDesignFile  CartDesignFile[]
+  OrderDesignSize OrderDesignSize[]
+  OrderDesignFile OrderDesignFile[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verificationtoken")
+}
+
+model Address {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  user       User      @relation(fields: [userId], references: [id])
+  countryId  Int?      @map("country_id")
+  country    Country?  @relation(fields: [countryId], references: [id])
+  stateId    Int?      @map("state_id")
+  stateRel   State?    @relation(fields: [stateId], references: [id])
+  cityId     Int?      @map("city_id")
+  cityRel    City?     @relation(fields: [cityId], references: [id])
+  city       String?
+  state      String?
+  address    String?
+  phone      String?
+  isDefault  Boolean?  @default(true) @map("is_default")
+  postalCode String?   @map("postal_code")
+  latitude   String?
+  longitude  String?
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+  Cart       Cart[]
+  Order      Order[]
+
+  @@map("addresses")
+}
+
+model Vendor {
+  id              Int        @id @default(autoincrement())
+  status          UserStatus
+  userId          Int        @unique @map("user_id")
+  user            User       @relation(fields: [userId], references: [id])
+  name            String
+  slug            String
+  logo            String?
+  phone           String?
+  email           String?
+  address         String?
+  metaTitle       String?    @map("meta_title")
+  metaTag         String?    @map("meta_tag")
+  metaDescription String?    @map("meta_description")
+  deletedAt       DateTime?  @map("deleted_at")
+  createdAt       DateTime?  @default(now())
+  updatedAt       DateTime?  @updatedAt @map("updated_at")
+  Store           Store[]
+  Product         Product[]
+  Review          Review[]
+  Cart            Cart[]
+
+  @@map("vendors")
+}
+
+model Store {
+  id              Int             @id @default(autoincrement())
+  vendorId        Int             @map("vendor_id")
+  vendor          Vendor          @relation(fields: [vendorId], references: [id])
+  status          Status
+  name            String
+  slug            String
+  tagline         String?
+  logo            String?
+  bannerImage     String?         @map("banner_image")
+  bannerColor     String?         @map("background_banner_color")
+  phone           String?
+  email           String?
+  address         String?
+  facebook        String?
+  instagram       String?
+  google          String?
+  twitter         String?
+  youtube         String?
+  metaTitle       String?         @map("meta_title")
+  metaTag         String?         @map("meta_tag")
+  metaDescription String?         @map("meta_description")
+  deletedAt       DateTime?       @map("deleted_at")
+  createdAt       DateTime?       @default(now())
+  updatedAt       DateTime?       @updatedAt @map("updated_at")
+  StoreCategory   StoreCategory[]
+  Product         Product[]
+  Review          Review[]
+
+  @@map("stores")
+}
+
+model Category {
+  id              Int               @id @default(autoincrement())
+  status          Status
+  parentId        Int?              @map("parent_id")
+  parent          Category?         @relation("CategoryTree", fields: [parentId], references: [id])
+  children        Category[]        @relation("CategoryTree")
+  title           String
+  slug            String
+  image           String?
+  description     String?
+  deletedAt       DateTime?         @map("deleted_at")
+  createdAt       DateTime?         @default(now()) @map("created_at")
+  updatedAt       DateTime?         @updatedAt @map("updated_at")
+  StoreCategory   StoreCategory[]
+  ProductCategory ProductCategory[]
+
+  @@map("categories")
+}
+
+model Color {
+  id           Int            @id @default(autoincrement())
+  title        String?
+  slug         String?
+  code         String?
+  deletedAt    DateTime?      @map("deleted_at")
+  createdAt    DateTime?      @default(now()) @map("created_at")
+  updatedAt    DateTime?      @updatedAt @map("updated_at")
+  ProductStock ProductStock[]
+  Cart         Cart[]
+  OrderProduct OrderProduct[]
+
+  @@map("colors")
+}
+
+model Size {
+  id              Int               @id @default(autoincrement())
+  title           String
+  slug            String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  deletedAt       DateTime?         @map("deleted_at")
+  ProductStock    ProductStock[]
+  Cart            Cart[]
+  OrderProduct    OrderProduct[]
+  CartDesignSize  CartDesignSize[]
+  OrderDesignSize OrderDesignSize[]
+
+  @@map("sizes")
+}
+
+model StoreCategory {
+  id         Int       @id @default(autoincrement())
+  storeId    Int       @map("store_id")
+  store      Store     @relation(fields: [storeId], references: [id])
+  categoryId Int       @map("category_id")
+  category   Category  @relation(fields: [categoryId], references: [id])
+  image      String?
+  deletedAt  DateTime? @map("deleted_at")
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  @@map("store_categories")
+}
+
+model Product {
+  id              Int               @id @default(autoincrement())
+  status          Status
+  addedById       Int               @map("added_by_id")
+  addedBy         User              @relation(fields: [addedById], references: [id])
+  vendorId        Int?              @map("vendor_id")
+  vendor          Vendor?           @relation(fields: [vendorId], references: [id])
+  storeId         Int?              @map("store_id")
+  store           Store?            @relation(fields: [storeId], references: [id])
+  companyId       Int?              @map("company_id")
+  title           String
+  slug            String
+  sku             String?
+  isFeatured      Boolean           @default(false) @map("is_featured")
+  thumbnail       String?
+  videoProvider   String?           @map("video_provider")
+  videoLink       String?           @map("video_link")
+  tags            String?
+  description     String?
+  unit            String?
+  unitPrice       Float?            @map("unit_price")
+  purchasePrice   Float?            @map("purchase_price")
+  sellPrice       Float?            @map("sell_price")
+  tax             Float?            @default(0)
+  discount        Float?            @default(0)
+  barcode         String?
+  metaTitle       String?           @map("meta_title")
+  metaTag         String?           @map("meta_tag")
+  metaDescription String?           @map("meta_description")
+  metaImage       String?           @map("meta_img")
+  deletedAt       DateTime?         @map("deleted_at")
+  createdAt       DateTime?         @default(now()) @map("created_at")
+  updatedAt       DateTime?         @updatedAt @map("updated_at")
+  ProductStock    ProductStock[]
+  ProductCategory ProductCategory[]
+  Review          Review[]
+  Cart            Cart[]
+  OrderProduct    OrderProduct[]
+
+  @@map("products")
+}
+
+model ProductStock {
+  id                Int                 @id @default(autoincrement())
+  addedById         Int                 @map("added_by_id")
+  addedBy           User                @relation(fields: [addedById], references: [id])
+  productId         Int                 @map("product_id")
+  product           Product             @relation(fields: [productId], references: [id])
+  colorId           Int?                @map("color_id")
+  color             Color?              @relation(fields: [colorId], references: [id])
+  sizeId            Int?                @map("size_id")
+  size              Size?               @relation(fields: [sizeId], references: [id])
+  sku               String?
+  price             Float               @default(0)
+  quantity          Float               @default(0)
+  deletedAt         DateTime?
+  createdAt         DateTime?           @default(now()) @map("created_at")
+  updatedAt         DateTime?           @updatedAt @map("updated_at")
+  Cart              Cart[]
+  OrderProduct      OrderProduct[]
+  ProductStockImage ProductStockImage[]
+
+  @@map("product_stocks")
+}
+
+model ProductStockImage {
+  id             Int                   @id @default(autoincrement())
+  productStockId Int                   @map("product_stock_id")
+  productStock   ProductStock          @relation(fields: [productStockId], references: [id])
+  type           ProductStockImageType
+  fileName       String?               @map("file_name")
+  deletedAt      DateTime?             @map("deleted_at")
+  createdAt      DateTime?             @default(now()) @map("created_at")
+  updatedAt      DateTime?             @updatedAt @map("updated_at")
+
+  @@map("product_stock_images")
+}
+
+model ProductCategory {
+  productId  Int      @map("product_id")
+  product    Product  @relation(fields: [productId], references: [id])
+  categoryId Int      @map("category_id")
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  @@id([productId, categoryId])
+  @@map("product_categories")
+}
+
+model Cart {
+  id             Int              @id @default(autoincrement())
+  vendorId       Int?             @map("vendor_id")
+  vendor         Vendor?          @relation(fields: [vendorId], references: [id])
+  userId         Int?             @map("user_id")
+  user           User?            @relation(fields: [userId], references: [id])
+  tempUserId     String?          @map("temp_user_id")
+  addressId      Int?             @map("address_id")
+  address        Address?         @relation(fields: [addressId], references: [id])
+  productId      Int?             @map("product_id")
+  product        Product?         @relation(fields: [productId], references: [id])
+  productStockId Int?             @map("product_stock_id")
+  productStock   ProductStock?    @relation(fields: [productStockId], references: [id])
+  sizeId         Int?             @map("size_id")
+  size           Size?            @relation(fields: [sizeId], references: [id])
+  colorId        Int?             @map("color_id")
+  color          Color?           @relation(fields: [colorId], references: [id])
+  title          String?
+  notes          String?
+  noOfColors     Int?             @map("no_of_color")
+  isDesign       Boolean          @default(false) @map("is_design")
+  quantity       Int?
+  price          Float?
+  tax            Float?
+  discount       Float?
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  deletedAt      DateTime?        @map("deleted_at")
+  CartDesignSize CartDesignSize[]
+  CartDesignFile CartDesignFile[]
+
+  @@map("carts")
+}
+
+model CartDesignSize {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  cartId    Int       @map("cart_id")
+  cart      Cart      @relation(fields: [cartId], references: [id])
+  sizeId    Int       @map("size_id")
+  size      Size      @relation(fields: [sizeId], references: [id])
+  quantity  Float     @default(0)
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("cart_design_sizes")
+}
+
+model CartDesignFile {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  user       User      @relation(fields: [userId], references: [id])
+  cartId     Int       @map("cart_id")
+  cart       Cart      @relation(fields: [cartId], references: [id])
+  designFile String    @map("design_file") @db.Text
+  type       String?
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  @@map("cart_design_files")
+}
+
+model OrderDesignSize {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id])
+  orderId   Int       @map("order_id")
+  order     Order     @relation(fields: [orderId], references: [id])
+  sizeId    Int       @map("size_id")
+  size      Size      @relation(fields: [sizeId], references: [id])
+  quantity  Float     @default(0)
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("order_design_sizes")
+}
+
+model OrderDesignFile {
+  id         Int       @id @default(autoincrement())
+  userId     Int       @map("user_id")
+  user       User      @relation(fields: [userId], references: [id])
+  orderId    Int       @map("order_id")
+  order      Order     @relation(fields: [orderId], references: [id])
+  designFile String    @map("design_file") @db.Text
+  type       String?
+  createdAt  DateTime? @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  @@map("order_design_files")
+}
+
+model Order {
+  id                  Int               @id @default(autoincrement())
+  userId              Int               @map("user_id")
+  user                User              @relation(fields: [userId], references: [id])
+  addressId           Int?              @map("address_id")
+  address             Address?          @relation(fields: [addressId], references: [id])
+  paymentTypeId       Int?              @map("payment_type_id")
+  vendorPaymentStatus String?           @map("vendor_payment_status")
+  paymentStatus       String            @map("payment_status")
+  isDesign            Boolean?          @map("is_design")
+  title               String?
+  noOfColors          Int?              @map("no_of_colors")
+  orderNotes          String?           @map("order_notes")
+  code                String?
+  grandTotal          Float             @map("grand_total")
+  tax                 Float             @default(0)
+  couponId            Int?              @map("coupon_id")
+  couponDiscount      Float?            @map("coupon_discount")
+  trackingCode        String?           @map("tracking_code")
+  notes               String?
+  deletedAt           DateTime?         @map("deleted_at")
+  createdAt           DateTime?         @default(now()) @map("created_at")
+  updatedAt           DateTime?         @updatedAt @map("updated_at")
+  OrderProduct        OrderProduct[]
+  OrderStatus         OrderStatus[]
+  OrderDesignSize     OrderDesignSize[]
+  OrderDesignFile     OrderDesignFile[]
+
+  @@map("orders")
+}
+
+model OrderProduct {
+  id             Int          @id @default(autoincrement())
+  orderId        Int          @map("order_id")
+  order          Order        @relation(fields: [orderId], references: [id])
+  productId      Int?         @map("product_id")
+  product        Product?     @relation(fields: [productId], references: [id])
+  productStockId Int          @map("product_stock_id")
+  productStock   ProductStock @relation(fields: [productStockId], references: [id])
+  sizeId         Int?         @map("size_id")
+  size           Size?        @relation(fields: [sizeId], references: [id])
+  colorId        Int?         @map("color_id")
+  color          Color?       @relation(fields: [colorId], references: [id])
+  quantity       Int?
+  price          Float?
+  tax            Float?       @default(0)
+  discount       Float?       @default(0)
+  deletedAt      DateTime?    @map("deleted_at")
+  createdAt      DateTime?    @default(now()) @map("created_at")
+  updatedAt      DateTime?    @updatedAt @map("updated_at")
+  Review         Review?
+
+  @@map("order_products")
+}
+
+model PaymentType {
+  id        Int       @id @default(autoincrement())
+  status    Status
+  title     String
+  deletedAt DateTime? @map("deleted_at")
+  createdAt DateTime? @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+
+  @@map("payment_types")
+}
+
+model OrderStatus {
+  id        Int             @id @default(autoincrement())
+  orderId   Int             @map("order_id")
+  order     Order           @relation(fields: [orderId], references: [id])
+  status    OrderStatusType
+  createdAt DateTime?       @default(now()) @map("created_at")
+  updatedAt DateTime?       @updatedAt @map("updated_at")
+
+  @@map("order_statuses")
+}
