@@ -21,6 +21,7 @@ export const SelectColor = ({ filteredColors, selectedColor, setSelectedColor }:
             }}
             checked={selectedColor === color.id}
             onChange={e => setSelectedColor(color.id)}
+            title={color.title}
           />
         ))}
       </div>
