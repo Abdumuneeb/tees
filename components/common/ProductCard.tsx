@@ -25,7 +25,7 @@ export default function ProductCard({ slug, title, price, reviews, image, discou
           sizes='(min-width: 1280px) 33vw, 100vw'
           fill
         />
-        <div className='absolute mt-[35%] h-12 w-full'>
+        <div className='absolute mt-[40%] h-11 w-full'>
           <Image
             src={image ? `${process.env.NEXT_PUBLIC_STORAGE_URL}/yourdesign.png` : ''}
             alt=''
