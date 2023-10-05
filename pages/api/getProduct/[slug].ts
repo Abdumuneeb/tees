@@ -41,6 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ProductStockImage: {
             select: {
               fileName: true,
+              type: true,
             },
           },
           id: true,
